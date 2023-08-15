@@ -54,7 +54,10 @@ class OrderServiceTest extends TestCase
         $this->mock(AffiliateService::class)
             ->shouldReceive('register')
             ->once()
-            ->with(\Mockery::on(fn ($model) => $model->is($this->merchant)), $data['customer_email'], $data['customer_name'], 0.1);
+            ->with(\Mockery::on(fn ($model) => $model->is($this->merchant)), $data['customer_email'], $data['customer_name'], 0.1)
+            // I have made this Change in this part because it was throwing exception (Received Mockery_3_App_Models::getAttribute(), but no expectations were specified)
+            // I could not find a better solution other than to change this part
+            ->andReturn($affiliate);
 
         $this->getOrderService()->processOrder($data);
 

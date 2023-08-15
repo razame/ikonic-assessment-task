@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Order>
@@ -19,6 +20,7 @@ class OrderFactory extends Factory
         return [
             'subtotal' => $subtotal = round(rand(100, 999) / 3, 2),
             'commission_owed' => round($subtotal * 0.1, 2),
+            'external_order_id' => Str::uuid()
         ];
     }
 }

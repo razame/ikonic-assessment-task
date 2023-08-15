@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Affiliate;
 use App\Models\Merchant;
 use App\Models\Order;
-use App\Models\User;
 
 class OrderService
 {
@@ -24,5 +22,26 @@ class OrderService
     public function processOrder(array $data)
     {
         // TODO: Complete this method
+        $merchant = Merchant::where('domain', $data['merchant_domain'])->orderBy('id', 'desc')->first();
+
+        $affiliate = $this->affiliateService->register($merchant, $data['customer_email'], $data['customer_name'], $merchant->default_commission_rate);
+
+        Order::updateOrCreate(
+            [
+                'external_order_id' => $data['order_id'],
+            ],
+            [
+                'external_order_id' => $data['order_id'],
+                'subtotal' => $data['subtotal_price'],
+                'affiliate_id' => $affiliate->id,
+                'merchant_id' => $merchant->id,
+                'commission_owed' => $data['subtotal_price'] * $affiliate->commission_rate,
+                'customer_email' => $data['customer_email'],
+                'customer_name' => $data['customer_name'],
+                'payout_status' => Order::STATUS_PAID,
+                'discount_code' => $data['discount_code']
+            ]
+        );
+
     }
 }

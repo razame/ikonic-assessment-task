@@ -7,6 +7,7 @@ use App\Models\Affiliate;
 use App\Models\Merchant;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class MerchantService
 {
@@ -21,6 +22,21 @@ class MerchantService
     public function register(array $data): Merchant
     {
         // TODO: Complete this method
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['api_key'],
+            'type' => User::TYPE_MERCHANT
+        ]);
+
+        if (!$user) {
+            throw new ModelNotFoundException();
+        }
+
+        return $user->merchant()->updateOrCreate(['domain' => $data['domain']],[
+            'domain' => $data['domain'],
+            'display_name' => $data['name']
+        ]);
     }
 
     /**
@@ -32,6 +48,14 @@ class MerchantService
     public function updateMerchant(User $user, array $data)
     {
         // TODO: Complete this method
+        return Merchant::where([
+            'user_id' => $user->id,
+        ])->update(
+            [
+                'domain' => $data['domain'],
+                'display_name' => $data['name']
+            ]
+        );
     }
 
     /**
@@ -44,6 +68,7 @@ class MerchantService
     public function findMerchantByEmail(string $email): ?Merchant
     {
         // TODO: Complete this method
+        return User::where('email', $email)->first()?->merchant;
     }
 
     /**
@@ -56,5 +81,9 @@ class MerchantService
     public function payout(Affiliate $affiliate)
     {
         // TODO: Complete this method
+        $unpaidOrders = $affiliate->orders()->where('payout_status', '=',Order::STATUS_UNPAID)->get();
+        foreach ($unpaidOrders as $order){
+            PayoutOrderJob::dispatch($order);
+        }
     }
 }
